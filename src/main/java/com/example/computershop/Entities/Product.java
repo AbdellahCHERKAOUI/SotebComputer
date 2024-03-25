@@ -32,7 +32,8 @@ public class Product {
     private double discount;
     private double specialPrice;
     private String imagePath;
-    @OneToOne(mappedBy = "product")
+    @OneToOne
+    @JoinColumn(name = "image-id")
     private  ImageProduct imageProduct;
 
     @ManyToOne
@@ -40,7 +41,7 @@ public class Product {
     private Category category;
 
     @OneToMany(mappedBy = "product", cascade = { CascadeType.PERSIST, CascadeType.MERGE }, fetch = FetchType.EAGER)
-    private List<CartItem> products = new ArrayList<>();
+    private List<CartItem> cartItems = new ArrayList<>();
 
     @OneToMany(mappedBy = "product", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     private List<OrderItem> orderItems = new ArrayList<>();

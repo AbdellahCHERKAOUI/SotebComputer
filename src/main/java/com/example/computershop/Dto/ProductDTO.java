@@ -16,6 +16,7 @@ public class ProductDTO {
     private byte[] image;*/
     private String description;
     private Integer quantity;
+    private String imagePath;
     private double price;
     private double discount;
     //private double specialPrice;

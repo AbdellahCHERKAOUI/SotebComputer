@@ -10,22 +10,27 @@ import org.springframework.web.multipart.MultipartFile;
 
 
 public interface ProductService {
-    ImageProduct saveFile(MultipartFile filImage);
 
-    ProductDTO addProduct(Long categoryId, Product product,MultipartFile imageFile ) throws IOException;
+    ProductDTO addProductByName(Long categoryId, Product product, String imageName) throws IOException;
+
+
+    ImageProduct saveFile(MultipartFile filImage);
 
     //ProductResponse getAllProducts(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder);
 
     //ProductResponse searchByCategory(Long categoryId, Integer pageNumber, Integer pageSize, String sortBy,
      //                                String sortOrder);
 
-    ProductDTO updateProduct(Long productId, Product product);
+    Product getProductWithImage(Long productId);
 
-    ProductDTO updateProductImage(Long productId, MultipartFile image) throws IOException;
+    ProductDTO updateProduct(Long productId, Product product);
 
     //ProductResponse searchProductByKeyword(String keyword, Integer pageNumber, Integer pageSize, String sortBy,
      //                                      String sortOrder);
 
     String deleteProduct(Long productId);
 
+    ProductDTO getProduct(Long productId);
+
+    List<ProductDTO> getAllProducts();
 }
