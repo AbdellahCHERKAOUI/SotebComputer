@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@CrossOrigin
+
 public class CategoryController {
     @Autowired
     private CategoryService categoryService;

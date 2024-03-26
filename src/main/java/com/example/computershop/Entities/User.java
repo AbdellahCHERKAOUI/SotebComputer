@@ -47,8 +47,8 @@ public class User {
     //@Pattern(regexp = "^\\d{10}$", message = "Mobile Number must contain only Numbers")
     private String mobileNumber;
 
-    @Email
-    @Column(unique = true, nullable = false)
+    /*@Email
+    @Column(unique = true, nullable = false)*/
     private String email;
 
     private String password;

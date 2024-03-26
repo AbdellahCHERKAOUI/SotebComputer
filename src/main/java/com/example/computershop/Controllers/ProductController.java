@@ -16,6 +16,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping(value = "/api")
+@CrossOrigin
 public class ProductController {
 
     private ProductService productService;
@@ -48,6 +49,7 @@ public class ProductController {
        return new ResponseEntity<>(savedProduct, HttpStatus.CREATED);
    }
     @GetMapping("/products/{productId}")
+    @CrossOrigin
     public ProductDTO getProductWithImage(@PathVariable Long productId) {
         return productServiceimp.getProduct(productId);
     }

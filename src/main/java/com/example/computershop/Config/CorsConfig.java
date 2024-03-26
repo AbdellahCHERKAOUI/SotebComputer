@@ -1,4 +1,3 @@
-/*
 package com.example.computershop.Config;
 
 import org.springframework.context.annotation.Bean;
@@ -14,11 +13,11 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOrigins(" https://deciding-chamois-perfectly.ngrok-free.app")
+                        .allowedOrigins(" *")
                         .allowedMethods("GET", "POST", "PUT", "DELETE")
                         .allowedHeaders("*")
                         .allowCredentials(true);
             }
         };
     }
-}*/
+}
