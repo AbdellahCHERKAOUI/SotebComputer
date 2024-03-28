@@ -9,7 +9,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping(value = "/api")
-@CrossOrigin(origins = "http://localhost:63342")
 public class ImageProductController {
 
     private ImageProductServiceImpl imageProductServiceImpl;
