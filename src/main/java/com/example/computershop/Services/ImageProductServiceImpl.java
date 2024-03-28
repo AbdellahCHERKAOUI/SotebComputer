@@ -1,10 +1,15 @@
 package com.example.computershop.Services;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.example.computershop.Entities.ImageProduct;
 import com.example.computershop.Entities.Product;
 import com.example.computershop.Repositories.ImageProductRepo;
+import com.example.computershop.Repositories.ProductRepository;
+import com.example.computershop.cloudinary.CloudinaryUtils;
 import com.example.computershop.exceptions.APIException;
 import com.example.computershop.exceptions.ResourceNotFoundException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,62 +24,53 @@ import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 @Service
 public class ImageProductServiceImpl implements ImageProductService{
     private ImageProductRepo imageProductRepo;
+    private ProductRepository productRepo;
 
-    public ImageProductServiceImpl(ImageProductRepo imageProductRepo) {
+    private String apiSecret;
+    public ImageProductServiceImpl(ImageProductRepo imageProductRepo,ProductRepository productRepo) {
         this.imageProductRepo = imageProductRepo;
+        this.productRepo=productRepo;
     }
 
-    private static final String UPLOAD_DIR = "C:\\Users\\LENOVO\\Desktop\\images";
     @Override
-    public ImageProduct saveImageProduct(MultipartFile imageFile,String imageName){
-        List<ImageProduct>imageProducts= imageProductRepo.getAllByFileName(imageName);
+    public ImageProduct saveImageProduct(MultipartFile imageFile, String imageName,Long productId) {
+        Product product=productRepo.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("product", "productId", productId));
         ImageProduct imageProduct = new ImageProduct();
+        List<ImageProduct> imageProducts = imageProductRepo.getAllByFileName(imageName);
         if (!imageFile.isEmpty()) {
             String fileName = StringUtils.cleanPath(imageFile.getOriginalFilename());
             String fileType = imageFile.getContentType();
-            String folderName = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
 
             try {
-                // Create the folder that we will store the file in
-                String uploadFolderPath = UPLOAD_DIR + "/" + folderName;
-                File folder = new File(uploadFolderPath);
-                if (!folder.exists()) {
-                    folder.mkdirs();
-                }
+                // Set up Cloudinary configuration
+                Cloudinary cloudinary = CloudinaryUtils.getCloudinary();
+                // Upload file to Cloudinary
+                Map<String, Object> uploadResult = cloudinary.uploader().upload(imageFile.getBytes(), ObjectUtils.asMap(
+                        "folder", "your_folder_name", // Optional: specify the folder in Cloudinary
+                        "public_id", imageName)); // Use imageName as public_id
 
-                try (InputStream inputStream = imageFile.getInputStream()) {
-                    String uniqueFileName = UUID.randomUUID().toString() + "_" + fileName;
-                    Path filePath = Paths.get(uploadFolderPath).resolve(uniqueFileName);
-                    for (ImageProduct imageProductList:imageProducts){
-                        if (imageProductList.getFileName().equals(imageName)){
-                            throw new APIException("image exist");
-                        }
+                // Create the imageProduct entity and set its properties
+                ImageProduct imageProduct1 = new ImageProduct();
+                imageProduct1.setProduct(product);
+                imageProduct1.setFileName(imageName);
+                imageProduct1.setFileType(fileType);
+                imageProduct1.setFilePath(uploadResult.get("url").toString()); // Save the URL from Cloudinary
 
-                    }
-                    // Create the imageProduct entity and set its properties
-                    ImageProduct imageProduct1 = new ImageProduct();
-                    imageProduct1.setFileName(imageName);
-                    imageProduct1.setFileType(fileType);
-                    imageProduct1.setFilePath(filePath.toString());
-                    imageProduct = imageProduct1;
-
-                    imageProductRepo.save(imageProduct1);
-
-
-                    Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING);
-                }
+                // Save imageProduct entity to your database
+                imageProduct = imageProductRepo.save(imageProduct1);
 
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-        return imageProduct ;
+        return imageProduct;
     }
-
     @Override
     public ImageProduct getImageProduct(String imageName) {
         ImageProduct imageProduct=imageProductRepo.getImageByFileName(imageName);

@@ -9,16 +9,16 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping(value = "/api")
-@CrossOrigin
+@CrossOrigin(origins = "http://localhost:63342")
 public class ImageProductController {
 
     private ImageProductServiceImpl imageProductServiceImpl;
     public ImageProductController(ImageProductServiceImpl imageProductServiceImpl) {
         this.imageProductServiceImpl = imageProductServiceImpl;
     }
-    @PostMapping(value = "/saveImage")
-    public ImageProduct saveImageProduct(@RequestParam MultipartFile imageFile,@RequestParam String imageName){
-        ImageProduct imageProduct= imageProductServiceImpl.saveImageProduct(imageFile,imageName);
+    @PostMapping(value = "/saveImage/{productId}")
+    public ImageProduct saveImageProduct(@RequestParam MultipartFile imageFile,@RequestParam String imageName,@PathVariable Long productId){
+        ImageProduct imageProduct= imageProductServiceImpl.saveImageProduct(imageFile,imageName,productId);
         return imageProduct;
 
     }

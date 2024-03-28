@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product List</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+</head>
+<body>
+<div id="productList">
+  <!-- Product list will be displayed here -->
+</div>
+<script>
+  /*$(document).ready(function (){
+      $.get( "https://heavy-wombat-86.telebit.io/api/allProducts", function( data ) {
+          console.log(data)
+      });
+  })*/
+  function fetchProducts() {
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === XMLHttpRequest.DONE) {
+        if (xhr.status === 200) {
+          try {
+            var products = JSON.parse(xhr.responseText);
+            displayProducts(products);
+          } catch (error) {
+            console.error('Error parsing JSON:', error);
+            // Handle parsing error (e.g., display error message)
+          }
+        } else {
+          console.error('Error fetching products:', xhr.status);
+          // Handle error response (e.g., display error message)
+        }
+      }
+    };
+    xhr.open('GET', 'https://happy-grasshopper-89.telebit.io/api/allProducts', true);
+    xhr.send();
+  }
+
+  function displayProducts(products) {
+    var productListDiv = document.getElementById('productList');
+    productListDiv.innerHTML = ''; // Clear existing content
+
+    products.forEach(function (product) {
+      var productDiv = document.createElement('div');
+      productDiv.innerHTML = `
+                    <h2>${product.productName}</h2>
+                    <p>Description: ${product.description}</p>
+                    <p>Price: $${product.price}</p>
+                    <p>Discount: ${product.discount}%</p>
+                    <img src="${product.imagePath}" alt="${product.productName}">
+                `;
+      productListDiv.appendChild(productDiv);
+    });
+  }
+
+  window.onload = function () {
+    fetchProducts();
+  };
+</script>
+
+
+</body>
+</html>

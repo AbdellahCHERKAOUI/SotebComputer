@@ -1,5 +1,7 @@
 package com.example.computershop.Services;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.example.computershop.Dto.ProductDTO;
 
 import com.example.computershop.Entities.Category;
@@ -11,18 +13,13 @@ import com.example.computershop.Repositories.ProductRepository;
 import com.example.computershop.exceptions.APIException;
 import com.example.computershop.exceptions.ResourceNotFoundException;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -30,7 +27,14 @@ import java.util.*;
 @Service
 @Transactional
 public class ProductServiceImpl implements ProductService{
+    @Value("${cloudinary.cloud_name}")
+    private String cloudName;
 
+    @Value("${cloudinary.api_key}")
+    private String apiKey;
+
+    @Value("${cloudinary.api_secret}")
+    private String apiSecret;
     private CategoryRepository categoryRepo;
 
     private ProductRepository productRepo;
@@ -49,7 +53,7 @@ public class ProductServiceImpl implements ProductService{
     private static final String UPLOAD_DIR = "C:\\Users\\LENOVO\\Desktop\\images";
 
     @Override
-    public ProductDTO addProductByName(Long categoryId, Product product, String imageName) throws IOException {
+    public ProductDTO addProduct(Long categoryId, Product product/*, String imageName*/) throws IOException {
 
         Category category = categoryRepo.findById(categoryId)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", "categoryId", categoryId));
@@ -58,9 +62,9 @@ public class ProductServiceImpl implements ProductService{
 
         List<Product> products = category.getProducts();
 
-        for (int i = 0; i < products.size(); i++) {
-            if (products.get(i).getProductName().equals(product.getProductName())
-                    && products.get(i).getDescription().equals(product.getDescription())) {
+        for (Product pr : products) {
+            if (pr.getProductName().equals(product.getProductName())
+                    && pr.getDescription().equals(product.getDescription())) {
 
                 isProductNotPresent = false;
                 break;
@@ -69,9 +73,7 @@ public class ProductServiceImpl implements ProductService{
 
         if (isProductNotPresent) {
             //product.setImage("default.png");
-            ImageProduct imageProduct=imageProductRepo.getImageByFileName(imageName);
-            product.setImagePath(imageProduct.getFilePath());
-            product.setImageProduct(imageProduct);
+            // product.setImagePath(imageProduct.getFilePath());
             product.setCategory(category);
 
             double specialPrice = product.getPrice() - ((product.getDiscount() * 0.01) * product.getPrice());
@@ -87,7 +89,7 @@ public class ProductServiceImpl implements ProductService{
 
 
 
-    public ImageProduct saveFile(MultipartFile file){
+    /*public ImageProduct saveFile(MultipartFile file){
         ImageProduct imageProduct = new ImageProduct();
         if (!file.isEmpty()) {
             String fileName = StringUtils.cleanPath(file.getOriginalFilename());
@@ -124,6 +126,39 @@ public class ProductServiceImpl implements ProductService{
             }
         }
         return imageProduct ;
+    }*/public ImageProduct saveFile(MultipartFile file) {
+        ImageProduct imageProduct = new ImageProduct();
+        if (!file.isEmpty()) {
+            String fileName = StringUtils.cleanPath(file.getOriginalFilename());
+            String fileType = file.getContentType();
+            String folderName = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
+
+            try {
+                // Set up Cloudinary configuration
+                Cloudinary cloudinary = new Cloudinary(ObjectUtils.asMap(
+                        "cloud_name", cloudName,
+                        "api_key", apiKey,
+                        "api_secret", apiSecret));
+
+                // Upload file to Cloudinary
+                Map<String, Object> uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.asMap(
+                        "folder", folderName,
+                        "public_id", fileName));
+
+                // Create the imageProduct entity and set its properties
+                ImageProduct imageProduct1 = new ImageProduct();
+                imageProduct1.setFileName(fileName);
+                imageProduct1.setFileType(fileType);
+                imageProduct1.setFilePath(uploadResult.get("url").toString());
+
+                // Save imageProduct entity to your database
+                imageProduct = imageProductRepo.save(imageProduct1);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return imageProduct;
     }
 
 
@@ -140,7 +175,6 @@ public class ProductServiceImpl implements ProductService{
         Product existingProduct = productRepo.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
 
-        // Update only if the product name or description has changed
         if (!existingProduct.getProductName().equals(updatedProduct.getProductName()) ||
                 !existingProduct.getDescription().equals(updatedProduct.getDescription())) {
 
@@ -157,8 +191,7 @@ public class ProductServiceImpl implements ProductService{
                 existingProduct.setProductName(updatedProduct.getProductName());
                 existingProduct.setDescription(updatedProduct.getDescription());
 
-                // Perform other updates as necessary
-                // For instance, updating price, discount, etc.
+
                 existingProduct.setPrice(updatedProduct.getPrice());
                 existingProduct.setDiscount(updatedProduct.getDiscount());
 
@@ -176,46 +209,6 @@ public class ProductServiceImpl implements ProductService{
     }
 
 
-    /*@Override
-    public ProductDTO updateProduct(Long productId, Product product) {
-
-        Product productFromDB = productRepo.findById(productId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
-
-        if (productFromDB == null) {
-            throw new APIException("Product not found with productId: " + productId);
-        }
-
-        //product.setImage(productFromDB.getImage());
-        product.setProductId(productId);
-        product.setCategory(productFromDB.getCategory());
-
-        double specialPrice = product.getPrice() - ((product.getDiscount() * 0.01) * product.getPrice());
-        product.setSpecialPrice(specialPrice);
-
-        Product savedProduct = productRepo.save(product);
-
-        //List<Cart> carts = cartRepo.findCartsByProductId(productId);
-*//*
-        List<CartDTO> cartDTOs = carts.stream().map(cart -> {
-            CartDTO cartDTO = modelMapper.map(cart, CartDTO.class);
-
-            List<ProductDTO> products = cart.getCartItems().stream()
-                    .map(p -> modelMapper.map(p.getProduct(), ProductDTO.class)).collect(Collectors.toList());
-
-            cartDTO.setProducts(products);
-
-            return cartDTO;
-
-        }).collect(Collectors.toList());
-
-        cartDTOs.forEach(cart -> cartService.updateProductInCarts(cart.getCartId(), productId));*//*
-
-        return modelMapper.map(savedProduct, ProductDTO.class);
-    }
-*/
-
-
 
 
     @Override
@@ -223,9 +216,6 @@ public class ProductServiceImpl implements ProductService{
         Product product = productRepo.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
 
-        //List<Cart> carts = cartRepo.findCartsByProductId(productId);
-
-        //carts.forEach(cart -> cartService.deleteProductFromCart(cart.getCartId(), productId));
 
         productRepo.deleteById(productId);
         imageProductRepo.deleteById(product.getImageProduct().getId());
@@ -256,7 +246,6 @@ public class ProductServiceImpl implements ProductService{
         List<ProductDTO> productDTOs = new ArrayList<>();
         for (Product product : products) {
             ProductDTO productDTO = new ProductDTO();
-            //productDTO.setProductId(product.getProductId()); // Assuming there's a productId field in Product entity
             productDTO.setProductName(product.getProductName());
             productDTO.setDescription(product.getDescription());
             productDTO.setDiscount(product.getDiscount());

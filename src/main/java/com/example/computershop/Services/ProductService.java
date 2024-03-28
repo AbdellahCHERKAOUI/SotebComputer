@@ -11,7 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface ProductService {
 
-    ProductDTO addProductByName(Long categoryId, Product product, String imageName) throws IOException;
+    ProductDTO addProduct(Long categoryId, Product product) throws IOException;
 
 
     ImageProduct saveFile(MultipartFile filImage);

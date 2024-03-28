@@ -15,8 +15,9 @@ import java.io.IOException;
 import java.util.List;
 
 @RestController
+@CrossOrigin(origins = "http://localhost:63342")
 @RequestMapping(value = "/api")
-@CrossOrigin
+
 public class ProductController {
 
     private ProductService productService;
@@ -38,18 +39,17 @@ public class ProductController {
        return new ResponseEntity<>(savedProduct, HttpStatus.CREATED);
    }*/
 
- @PostMapping(value = "/{categoryId}")
-   public ResponseEntity<ProductDTO> addProductByName(@PathVariable Long categoryId,
-                                                      @RequestPart("productJson") String productJson,
-                                                      @RequestParam String imageName) throws IOException {
-       ObjectMapper objectMapper = new ObjectMapper();
-       Product product = objectMapper.readValue(productJson, Product.class);
-       ProductDTO savedProduct = productService.addProductByName(categoryId, product, imageName);
+   @PostMapping(value = "/{categoryId}")
+   public ResponseEntity<ProductDTO> addProduct(@PathVariable Long categoryId,
+                                                      @RequestBody Product product
+                                                      /*@RequestParam String imageName*/) throws IOException {
+      /* ObjectMapper objectMapper = new ObjectMapper();
+       Product product = objectMapper.readValue(productJson, Product.class);*/
+       ProductDTO savedProduct = productService.addProduct(categoryId, product);
 
        return new ResponseEntity<>(savedProduct, HttpStatus.CREATED);
    }
     @GetMapping("/products/{productId}")
-    @CrossOrigin
     public ProductDTO getProductWithImage(@PathVariable Long productId) {
         return productServiceimp.getProduct(productId);
     }

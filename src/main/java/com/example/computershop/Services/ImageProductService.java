@@ -4,7 +4,7 @@ import com.example.computershop.Entities.ImageProduct;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface ImageProductService {
-    ImageProduct saveImageProduct(MultipartFile imageFile,String imageName);
+    ImageProduct saveImageProduct(MultipartFile imageFile,String imageName,Long productId);
 
     ImageProduct getImageProduct(String imageName);
 
