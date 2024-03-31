@@ -4,10 +4,7 @@ import com.example.computershop.Dto.CartDTO;
 import com.example.computershop.Services.CartService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class CartController {
@@ -21,5 +18,9 @@ public class CartController {
         CartDTO cartDTO = cartService.addProductToCart(cartId, productId, quantity);
 
         return new ResponseEntity<CartDTO>(cartDTO, HttpStatus.CREATED);
+    }
+    @DeleteMapping(value = "/deleteAllCartItems")
+    public void deleteAllCartitems(){
+        cartService.deleteAllcartItems();
     }
 }

@@ -10,6 +10,7 @@ import com.example.computershop.Entities.Product;
 import com.example.computershop.Repositories.CategoryRepository;
 import com.example.computershop.Repositories.ImageProductRepo;
 import com.example.computershop.Repositories.ProductRepository;
+import com.example.computershop.cloudinary.CloudinaryUtils;
 import com.example.computershop.exceptions.APIException;
 import com.example.computershop.exceptions.ResourceNotFoundException;
 import org.modelmapper.ModelMapper;
@@ -27,14 +28,7 @@ import java.util.*;
 @Service
 @Transactional
 public class ProductServiceImpl implements ProductService{
-    @Value("${cloudinary.cloud_name}")
-    private String cloudName;
 
-    @Value("${cloudinary.api_key}")
-    private String apiKey;
-
-    @Value("${cloudinary.api_secret}")
-    private String apiSecret;
     private CategoryRepository categoryRepo;
 
     private ProductRepository productRepo;
@@ -53,34 +47,28 @@ public class ProductServiceImpl implements ProductService{
     private static final String UPLOAD_DIR = "C:\\Users\\LENOVO\\Desktop\\images";
 
     @Override
-    public ProductDTO addProduct(Long categoryId, Product product/*, String imageName*/) throws IOException {
-
+    public ProductDTO addProduct(Long categoryId, Product product,MultipartFile image) throws IOException {
         Category category = categoryRepo.findById(categoryId)
                 .orElseThrow(() -> new ResourceNotFoundException("Category", "categoryId", categoryId));
-
         boolean isProductNotPresent = true;
-
         List<Product> products = category.getProducts();
-
         for (Product pr : products) {
             if (pr.getProductName().equals(product.getProductName())
                     && pr.getDescription().equals(product.getDescription())) {
-
                 isProductNotPresent = false;
                 break;
             }
         }
-
         if (isProductNotPresent) {
             //product.setImage("default.png");
             // product.setImagePath(imageProduct.getFilePath());
+            ImageProduct imageProduct=saveFile(image);
+            product.setImageProduct(imageProduct);
+            product.setImagePath(imageProduct.getFilePath());
             product.setCategory(category);
-
             double specialPrice = product.getPrice() - ((product.getDiscount() * 0.01) * product.getPrice());
             product.setSpecialPrice(specialPrice);
-
             Product savedProduct = productRepo.save(product);
-
             return modelMapper.map(savedProduct, ProductDTO.class);
         } else {
             throw new APIException("Product already exists !!!");
@@ -89,44 +77,7 @@ public class ProductServiceImpl implements ProductService{
 
 
 
-    /*public ImageProduct saveFile(MultipartFile file){
-        ImageProduct imageProduct = new ImageProduct();
-        if (!file.isEmpty()) {
-            String fileName = StringUtils.cleanPath(file.getOriginalFilename());
-            String fileType = file.getContentType();
-            String folderName = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"));
-
-            try {
-                // Create the folder that we will store the file in
-                String uploadFolderPath = UPLOAD_DIR + "/" + folderName;
-                File folder = new File(uploadFolderPath);
-                if (!folder.exists()) {
-                    folder.mkdirs();
-                }
-
-                try (InputStream inputStream = file.getInputStream()) {
-                    String uniqueFileName = UUID.randomUUID().toString() + "_" + fileName;
-                    Path filePath = Paths.get(uploadFolderPath).resolve(uniqueFileName);
-
-                    // Create the imageProduct entity and set its properties
-                    ImageProduct imageProduct1 = new ImageProduct();
-                    imageProduct1.setFileName(fileName);
-                    imageProduct1.setFileType(fileType);
-                    imageProduct1.setFilePath(filePath.toString());
-
-                    imageProduct = imageProduct1;
-
-                    imageProductRepo.save(imageProduct1);
-
-                    Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING);
-                }
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return imageProduct ;
-    }*/public ImageProduct saveFile(MultipartFile file) {
+   public ImageProduct saveFile(MultipartFile file) {
         ImageProduct imageProduct = new ImageProduct();
         if (!file.isEmpty()) {
             String fileName = StringUtils.cleanPath(file.getOriginalFilename());
@@ -135,10 +86,7 @@ public class ProductServiceImpl implements ProductService{
 
             try {
                 // Set up Cloudinary configuration
-                Cloudinary cloudinary = new Cloudinary(ObjectUtils.asMap(
-                        "cloud_name", cloudName,
-                        "api_key", apiKey,
-                        "api_secret", apiSecret));
+                Cloudinary cloudinary = CloudinaryUtils.getCloudinary();
 
                 // Upload file to Cloudinary
                 Map<String, Object> uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.asMap(
@@ -257,9 +205,6 @@ public class ProductServiceImpl implements ProductService{
         return productDTOs;
     }
 
-    public Optional<ImageProduct> getImageProductById(long id) {
-        return imageProductRepo.findById(id);
-    }
 
 
 }

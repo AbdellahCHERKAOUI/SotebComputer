@@ -30,7 +30,7 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long orderId;
 
-    @Email
+    //@Email
     @Column(nullable = false)
     private String email;
 

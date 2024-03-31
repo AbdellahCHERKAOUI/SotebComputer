@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
@@ -22,11 +23,9 @@ public class ProductController {
 
     private ProductService productService;
 
-    private ProductServiceImpl productServiceimp;
-
-    public ProductController(ProductService productService,ProductServiceImpl productServiceImp) {
+    public ProductController(ProductService productService) {
         this.productService = productService;
-        this.productServiceimp=productServiceImp;
+
     }
  /*  @PostMapping(value = "/{categoryId}",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
    public ResponseEntity<ProductDTO> addProduct(@PathVariable Long categoryId,
@@ -41,46 +40,30 @@ public class ProductController {
 
    @PostMapping(value = "/{categoryId}")
    public ResponseEntity<ProductDTO> addProduct(@PathVariable Long categoryId,
-                                                      @RequestBody Product product
-                                                      /*@RequestParam String imageName*/) throws IOException {
-      /* ObjectMapper objectMapper = new ObjectMapper();
-       Product product = objectMapper.readValue(productJson, Product.class);*/
-       ProductDTO savedProduct = productService.addProduct(categoryId, product);
-
+                                                @RequestPart Product product,@RequestPart MultipartFile image
+                                                ) throws IOException {
+       ProductDTO savedProduct = productService.addProduct(categoryId, product,image);
        return new ResponseEntity<>(savedProduct, HttpStatus.CREATED);
    }
     @GetMapping("/products/{productId}")
-    public ProductDTO getProductWithImage(@PathVariable Long productId) {
-        return productServiceimp.getProduct(productId);
+    public ProductDTO getProduct(@PathVariable Long productId) {
+        return productService.getProduct(productId);
     }
 
-   /* @GetMapping(value = "/{id}")
-    public Product consultProduct(@PathVariable Long id){
-        return productServiceimp.getproduct(id).get();
-    }*/
    @GetMapping(value = "/allProducts")
    public List<ProductDTO> getAllProducts() {
-       return productServiceimp.getAllProducts();
+       return productService.getAllProducts();
    }
    @PutMapping("/admin/products/{productId}")
    public ResponseEntity<ProductDTO> updateProduct(@RequestBody Product product,
                                                    @PathVariable Long productId) {
        ProductDTO updatedProduct = productService.updateProduct(productId, product);
 
-       return new ResponseEntity<ProductDTO>(updatedProduct, HttpStatus.OK);
+       return new ResponseEntity<>(updatedProduct, HttpStatus.OK);
    }
 
-    @GetMapping("/{id}")
-
-   public ResponseEntity<?> getImageProductById(@PathVariable("id") long id) {
-       try {
-           return ResponseEntity.ok().body(productServiceimp.getImageProductById(id).orElse(null));
-       } catch (Exception e) {
-           return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error occurred while retrieving image product.");
-       }
-   }
     @DeleteMapping("/admin/delete/{productId}")
-    public ResponseEntity<String> deleteProductByCategory(@PathVariable Long productId) {
+    public ResponseEntity<String> deleteProduct(@PathVariable Long productId) {
         String status = productService.deleteProduct(productId);
 
         return new ResponseEntity<String>(status, HttpStatus.OK);

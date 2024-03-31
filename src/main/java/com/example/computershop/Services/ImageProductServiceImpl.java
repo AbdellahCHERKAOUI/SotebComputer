@@ -50,7 +50,6 @@ public class ImageProductServiceImpl implements ImageProductService{
             try {
                 // Set up Cloudinary configuration
                 Cloudinary cloudinary = CloudinaryUtils.getCloudinary();
-                // Upload file to Cloudinary
                 Map<String, Object> uploadResult = cloudinary.uploader().upload(imageFile.getBytes(), ObjectUtils.asMap(
                         "folder", "your_folder_name", // Optional: specify the folder in Cloudinary
                         "public_id", imageName)); // Use imageName as public_id
