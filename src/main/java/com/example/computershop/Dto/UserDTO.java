@@ -22,4 +22,7 @@ public class UserDTO {
     private Set<Role> roles = new HashSet<>();
     private AddressDTO address;
     private CartDTO cart;
+
+    public UserDTO(String username, String email, String encode) {
+    }
 }

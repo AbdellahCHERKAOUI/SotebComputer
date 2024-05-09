@@ -6,11 +6,17 @@ import com.example.computershop.Entities.Product;
 import com.example.computershop.Repositories.CategoryRepository;
 import com.example.computershop.exceptions.APIException;
 import com.example.computershop.exceptions.ResourceNotFoundException;
+import com.example.computershop.response.CategoryResponse;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class CategoryServiceImpl implements CategoryService{
@@ -41,6 +47,36 @@ public class CategoryServiceImpl implements CategoryService{
 
          return modelMapper.map(category, CategoryDTO.class);
      }
+
+    @Override
+    public CategoryResponse getCategories(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
+        Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+
+        Pageable pageDetails = PageRequest.of(pageNumber, pageSize, sortByAndOrder);
+
+        Page<Category> pageCategories = categoryRepo.findAll(pageDetails);
+
+        List<Category> categories = pageCategories.getContent();
+
+        if (categories.size() == 0) {
+            throw new APIException("No category is created till now");
+        }
+
+        List<CategoryDTO> categoryDTOs = categories.stream()
+                .map(category -> modelMapper.map(category, CategoryDTO.class)).collect(Collectors.toList());
+
+        CategoryResponse categoryResponse = new CategoryResponse();
+
+        categoryResponse.setContent(categoryDTOs);
+        categoryResponse.setPageNumber(pageCategories.getNumber());
+        categoryResponse.setPageSize(pageCategories.getSize());
+        categoryResponse.setTotalElements(pageCategories.getTotalElements());
+        categoryResponse.setTotalPages(pageCategories.getTotalPages());
+        categoryResponse.setLastPage(pageCategories.isLast());
+
+        return categoryResponse;    }
+
     @Override
     public CategoryDTO updateCategory(Category category, Long categoryId) {
 

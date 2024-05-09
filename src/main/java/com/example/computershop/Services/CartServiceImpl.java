@@ -4,6 +4,7 @@ import com.example.computershop.Dto.CartDTO;
 import com.example.computershop.Dto.ProductDTO;
 import com.example.computershop.Entities.Cart;
 import com.example.computershop.Entities.CartItem;
+import com.example.computershop.Entities.Category;
 import com.example.computershop.Entities.Product;
 import com.example.computershop.Repositories.CartItemRepository;
 import com.example.computershop.Repositories.CartRepository;
@@ -88,13 +89,44 @@ public class CartServiceImpl implements CartService{
 
     @Override
     public CartDTO updateProductQuantityInCart(Long cartId, Long productId, Integer quantity) {
-        return null;
+        Cart cart =cartRepo.findById(cartId).orElseThrow(() -> new ResourceNotFoundException("Cart", "cartId", cartId));
+        Product product = productRepo.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "productId", productId));
+
+        if (product.getQuantity() == 0) {
+            throw new APIException(product.getProductName() + " is not available");
+        } else if(product.getQuantity() < quantity) {
+            throw new APIException("Please, make an order of the " + product.getProductName()
+                    + " less than or equal to the quantity " + product.getQuantity() + ".");
+        }
+        CartItem cartItem=cartItemRepo.findCartItemByProductIdAndCartId(cartId,productId);
+    if (cartItem==null){
+        throw new APIException("not found product with productId "+ productId +" in cart");
+    }
+        double cartPrice = cart.getTotalPrice() - (cartItem.getProductPrice() * cartItem.getQuantity());
+
+        product.setQuantity(product.getQuantity() + cartItem.getQuantity() - quantity);
+
+        cartItem.setProductPrice(product.getSpecialPrice());
+        cartItem.setQuantity(quantity);
+        cartItem.setDiscount(product.getDiscount());
+
+        cart.setTotalPrice(cartPrice + (cartItem.getProductPrice() * quantity));
+
+        cartItem = cartItemRepo.save(cartItem);
+
+        CartDTO cartDTO = modelMapper.map(cart, CartDTO.class);
+
+        List<ProductDTO> productDTOs = cart.getCartItems().stream()
+                .map(p -> modelMapper.map(p.getProduct(), ProductDTO.class)).collect(Collectors.toList());
+
+        cartDTO.setProducts(productDTOs);
+
+        return cartDTO;
     }
 
-    @Override
-    public void updateProductInCarts(Long cartId, Long productId) {
 
-    }
+
 
     @Override
     public String deleteProductFromCart(Long cartId, Long productId) {

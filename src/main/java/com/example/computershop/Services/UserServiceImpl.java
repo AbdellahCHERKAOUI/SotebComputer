@@ -22,13 +22,13 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
-    public UserDTO registerUser(UserDTO userDTO) {
-            User user = modelMapper.map(userDTO, User.class);
+    public User registerUser(User user) {
+           // User user = modelMapper.map(userDTO, User.class);
             Cart cart = new Cart();
             user.setCart(cart);
             cart.setUser(user);
             User userSaved=userRepo.save(user);
-       return userDTO;
+       return user;
     }
 
     @Override

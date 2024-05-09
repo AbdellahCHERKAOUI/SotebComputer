@@ -1,9 +1,10 @@
 package com.example.computershop.Services;
 
 import com.example.computershop.Dto.UserDTO;
+import com.example.computershop.Entities.User;
 
 public interface UserService {
-    UserDTO registerUser(UserDTO userDTO);
+    User registerUser(User user);
 
     UserDTO getUserById(Long userId);
 
